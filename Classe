@@ -1,0 +1,51 @@
+using MySql.Data.MySqlClient;
+
+namespace GestaoProdutos
+{
+    public class Usuario
+    {
+        public string Nome { get; set; }
+        public string Email { get; set; }
+        public string Cpf { get; set; }
+        public string UsuarioLogin { get; set; }
+        public string Senha { get; set; }
+
+        public bool Cadastrar()
+        {
+            using (var conn = Conexao.ObterConexao())
+            {
+                conn.Open();
+
+                var check = new MySqlCommand("SELECT * FROM usuarios WHERE email=@e OR cpf=@c", conn);
+                check.Parameters.AddWithValue("@e", Email);
+                check.Parameters.AddWithValue("@c", Cpf);
+                if (check.ExecuteReader().HasRows) return false;
+                conn.Close(); conn.Open();
+
+                string hash = Seguranca.Criptografar(Senha);
+                var cmd = new MySqlCommand("INSERT INTO usuarios (nome, email, cpf, usuario, senha) VALUES (@n, @e, @c, @u, @s)", conn);
+                cmd.Parameters.AddWithValue("@n", Nome);
+                cmd.Parameters.AddWithValue("@e", Email);
+                cmd.Parameters.AddWithValue("@c", Cpf);
+                cmd.Parameters.AddWithValue("@u", UsuarioLogin);
+                cmd.Parameters.AddWithValue("@s", hash);
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+        }
+
+        public static string Login(string usuarioOuEmail, string senha)
+        {
+            using (var conn = Conexao.ObterConexao())
+            {
+                conn.Open();
+                string hash = Seguranca.Criptografar(senha);
+                var cmd = new MySqlCommand("SELECT nome FROM usuarios WHERE (email=@u OR usuario=@u) AND senha=@s", conn);
+                cmd.Parameters.AddWithValue("@u", usuarioOuEmail);
+                cmd.Parameters.AddWithValue("@s", hash);
+                var result = cmd.ExecuteScalar();
+                return result?.ToString();
+            }
+        }
+    }
+}
