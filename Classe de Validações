@@ -1,0 +1,30 @@
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace GestaoProdutos
+{
+    public class Validacoes
+    {
+        public static bool ValidarEmail(string email) =>
+            Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+        public static bool ValidarCPF(string cpf)
+        {
+            cpf = new string(cpf.Where(char.IsDigit).ToArray());
+            if (cpf.Length != 11 || cpf.Distinct().Count() == 1) return false;
+
+            int[] mult1 = {10,9,8,7,6,5,4,3,2};
+            int[] mult2 = {11,10,9,8,7,6,5,4,3,2};
+            string temp = cpf.Substring(0, 9);
+            int soma = 0;
+
+            for (int i = 0; i < 9; i++) soma += int.Parse(temp[i].ToString()) * mult1[i];
+            int resto = soma % 11 < 2 ? 0 : 11 - soma % 11;
+            temp += resto;
+            soma = 0;
+            for (int i = 0; i < 10; i++) soma += int.Parse(temp[i].ToString()) * mult2[i];
+            resto = soma % 11 < 2 ? 0 : 11 - soma % 11;
+            return cpf.EndsWith(temp[9].ToString() + resto.ToString());
+        }
+    }
+}
