@@ -1,0 +1,14 @@
+using MySql.Data.MySqlClient;
+
+namespace GestaoProdutos
+{
+    public class Conexao
+    {
+        private static string connStr = "server=localhost;database=loja;uid=root;pwd=;";
+
+        public static MySqlConnection ObterConexao()
+        {
+            return new MySqlConnection(connStr);
+        }
+    }
+}
