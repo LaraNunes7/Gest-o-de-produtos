@@ -1,0 +1,84 @@
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+
+namespace GestaoProdutos
+{
+    public class Produto
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; }
+        public decimal Preco { get; set; }
+        public int Estoque { get; set; }
+        public string Categoria { get; set; }
+
+        public void Inserir()
+        {
+            using (var conn = Conexao.ObterConexao())
+            {
+                conn.Open();
+                var cmd = new MySqlCommand("INSERT INTO produtos (nome, preco, estoque, categoria) VALUES (@n,@p,@e,@c)", conn);
+                cmd.Parameters.AddWithValue("@n", Nome);
+                cmd.Parameters.AddWithValue("@p", Preco);
+                cmd.Parameters.AddWithValue("@e", Estoque);
+                cmd.Parameters.AddWithValue("@c", Categoria);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void Atualizar()
+        {
+            using (var conn = Conexao.ObterConexao())
+            {
+                conn.Open();
+                var cmd = new MySqlCommand("UPDATE produtos SET nome=@n, preco=@p, estoque=@e, categoria=@c WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@id", Id);
+                cmd.Parameters.AddWithValue("@n", Nome);
+                cmd.Parameters.AddWithValue("@p", Preco);
+                cmd.Parameters.AddWithValue("@e", Estoque);
+                cmd.Parameters.AddWithValue("@c", Categoria);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void Deletar()
+        {
+            using (var conn = Conexao.ObterConexao())
+            {
+                conn.Open();
+                var cmd = new MySqlCommand("DELETE FROM produtos WHERE id=@id", conn);
+                cmd.Parameters.AddWithValue("@id", Id);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public static List<Produto> Buscar(string termo)
+        {
+            var lista = new List<Produto>();
+            using (var conn = Conexao.ObterConexao())
+            {
+                conn.Open();
+                var cmd = new MySqlCommand("SELECT * FROM produtos WHERE nome LIKE @t OR categoria LIKE @t", conn);
+                cmd.Parameters.AddWithValue("@t", "%" + termo + "%");
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    lista.Add(new Produto
+                    {
+                        Id = Convert.ToInt32(reader["id"]),
+                        Nome = reader["nome"].ToString(),
+                        Preco = Convert.ToDecimal(reader["preco"]),
+                        Estoque = Convert.ToInt32(reader["estoque"]),
+                        Categoria = reader["categoria"].ToString()
+                    });
+                }
+            }
+            return lista;
+        }
+
+        public static List<Produto> ListarTodos()
+        {
+            return Buscar("");
+        }
+    }
+}
